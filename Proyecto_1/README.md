@@ -611,5 +611,143 @@ WHERE
 ```
 
 
+# Mostrar consulta 8
+Esta consulta muestra las ventas por mes de Inglaterra. Debe de mostrar el número del mes y el monto, esta peticion GET se realizara en "http://127.0.0.1:5000/api/data/consulta8"
+
+```
 
 
+@app.route('/api/data/consulta8', methods=['GET'])
+def consulta8():
+    try:
+
+  
+        # Establecer conexión a la base de datos
+        connection = connect_to_database()
+
+        # Crear un cursor para ejecutar consultas SQL
+        cursor = connection.cursor(dictionary=True)
+
+        # Definir la consulta SQL
+        query = """
+   SELECT 
+    MONTH(o.fecha_orden) AS numero_mes,
+    SUM(d.cantidad * p.precio) AS monto_total
+FROM 
+    orden o
+JOIN 
+    detalle_orden d ON o.id_orden = d.id_orden
+JOIN 
+    productos p ON d.id_producto = p.id_producto
+JOIN 
+    vendedores v ON d.id_vendedor = v.id_vendedor
+JOIN 
+    paises pa ON v.id_pais = pa.id_pais
+WHERE 
+    pa.nombre = 'Inglaterra'
+GROUP BY 
+    numero_mes
+ORDER BY 
+    numero_mes;
+
+        """
+
+        # Ejecutar la consulta SQL
+        cursor.execute(query)
+
+        # Obtener el resultado de la consulta
+        result = cursor.fetchall()
+
+        # Cerrar el cursor y la conexión
+        cursor.close()
+        connection.close()
+
+        # Devolver el resultado en formato JSON
+        return jsonify(result)
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+```
+
+
+# Mostrar consulta 9
+Este muestra el mes con más y menos ventas. Se debe de mostrar el número de mes y monto, esto atraves de la peticion GET en la direccion "http://127.0.0.1:5000/api/data/consulta9"
+
+
+```
+
+
+
+@app.route('/api/data/consulta9', methods=['GET'])
+def consulta9():
+    try:
+
+  
+        # Establecer conexión a la base de datos
+        connection = connect_to_database()
+
+        # Crear un cursor para ejecutar consultas SQL
+        cursor = connection.cursor(dictionary=True)
+
+        # Definir la consulta SQL
+        query = """
+SELECT
+    mes_max.numero_mes AS mes_mas_ventas,
+    mes_max.monto_max AS monto_max_ventas,
+    mes_min.numero_mes AS mes_menos_ventas,
+    mes_min.monto_min AS monto_min_ventas
+FROM
+    (SELECT
+        MONTH(o.fecha_orden) AS numero_mes,
+        SUM(d.cantidad * p.precio) AS monto_max
+    FROM
+        orden o
+    JOIN
+        detalle_orden d ON o.id_orden = d.id_orden
+    JOIN
+        productos p ON d.id_producto = p.id_producto
+    GROUP BY
+        numero_mes
+    ORDER BY
+        monto_max DESC
+    LIMIT 1) AS mes_max,
+    (SELECT
+        MONTH(o.fecha_orden) AS numero_mes,
+        SUM(d.cantidad * p.precio) AS monto_min
+    FROM
+        orden o
+    JOIN
+        detalle_orden d ON o.id_orden = d.id_orden
+    JOIN
+        productos p ON d.id_producto = p.id_producto
+    GROUP BY
+        numero_mes
+    ORDER BY
+        monto_min ASC
+    LIMIT 1) AS mes_min;
+
+
+        """
+
+        # Ejecutar la consulta SQL
+        cursor.execute(query)
+
+        # Obtener el resultado de la consulta
+        result = cursor.fetchall()
+
+        # Cerrar el cursor y la conexión
+        cursor.close()
+        connection.close()
+
+        # Devolver el resultado en formato JSON
+        return jsonify(result)
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+
+
+```
