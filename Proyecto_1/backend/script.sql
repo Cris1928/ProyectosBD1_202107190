@@ -1,3 +1,6 @@
+USE bdmysql;
+
+
 CREATE TABLE `paises` (
   `id_pais` INT NOT NULL,
   `nombre` VARCHAR(45) NOT NULL,
