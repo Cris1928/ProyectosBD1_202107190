@@ -187,8 +187,428 @@ LIMIT 1;
 ```
 
 
+# Mostrar consulta 2
+ la consulta 2 mostrara el producto más y menos comprado. Se debe mostrar el id del producto,nombre del producto, categoría, cantidad de unidades y monto vendido.
+esto en la direccion "http://127.0.0.1:5000/api/data/consulta2"
+```
+@app.route('/api/data/consulta2', methods=['GET'])
+def consulta2():
+    try:
+
+  
+        # Establecer conexión a la base de datos
+        connection = connect_to_database()
+
+        # Crear un cursor para ejecutar consultas SQL
+        cursor = connection.cursor(dictionary=True)
+
+        # Definir la consulta SQL
+        query = """
+       SELECT
+    max_productos.id_producto AS id_producto_mas_comprado,
+    max_productos.nombres AS nombre_producto_mas_comprado,
+    max_productos.categoria AS categoria_producto_mas_comprado,
+    max_productos.cantidad AS cantidad_unidades_mas_comprada,
+    max_productos.monto AS monto_vendido_mas_comprado,
+    min_productos.id_producto AS id_producto_menos_comprado,
+    min_productos.nombres AS nombre_producto_menos_comprado,
+    min_productos.categoria AS categoria_producto_menos_comprado,
+    min_productos.cantidad AS cantidad_unidades_menos_comprada,
+    min_productos.monto AS monto_vendido_menos_comprado
+FROM
+    (SELECT
+        d.id_producto,
+        p.nombres,
+        c.nombre AS categoria,
+        SUM(d.cantidad) AS cantidad,
+        SUM(d.cantidad * p.precio) AS monto
+    FROM
+        detalle_orden d
+    JOIN
+        productos p ON d.id_producto = p.id_producto
+    JOIN
+        categorias c ON p.id_categoria = c.id_categoria
+    GROUP BY
+        d.id_producto
+    ORDER BY
+        cantidad DESC
+    LIMIT 1) AS max_productos,
+    (SELECT
+        d.id_producto,
+        p.nombres,
+        c.nombre AS categoria,
+        SUM(d.cantidad) AS cantidad,
+        SUM(d.cantidad * p.precio) AS monto
+    FROM
+        detalle_orden d
+    JOIN
+        productos p ON d.id_producto = p.id_producto
+    JOIN
+        categorias c ON p.id_categoria = c.id_categoria
+    GROUP BY
+        d.id_producto
+    ORDER BY
+        cantidad ASC
+    LIMIT 1) AS min_productos;
+        """
+
+        # Ejecutar la consulta SQL
+        cursor.execute(query)
+
+        # Obtener el resultado de la consulta
+        result = cursor.fetchall()
+
+        # Cerrar el cursor y la conexión
+        cursor.close()
+        connection.close()
+
+        # Devolver el resultado en formato JSON
+        return jsonify(result)
 
 
+    except Exception as e:
+        return jsonify({'error': str(e)})
+```
+
+
+# Mostrar consulta 2
+ la consulta 2 mostrara   a la persona que más ha vendido. Se debe mostrar el id del vendedor,nombre del vendedor, monto total vendido.
+
+```
+
+@app.route('/api/data/consulta3', methods=['GET'])
+def consulta3():
+    try:
+
+  
+        # Establecer conexión a la base de datos
+        connection = connect_to_database()
+
+        # Crear un cursor para ejecutar consultas SQL
+        cursor = connection.cursor(dictionary=True)
+
+        # Definir la consulta SQL
+        query = """
+        SELECT vendedores.id_vendedor, vendedores.nombre AS Nombre_Vendedor, SUM(detalle_orden.cantidad * productos.Precio) AS Monto_Total_Vendido
+        FROM vendedores
+        JOIN detalle_orden ON vendedores.id_vendedor = detalle_orden.id_vendedor
+        JOIN productos ON detalle_orden.id_producto = productos.id_producto
+        GROUP BY vendedores.id_vendedor, vendedores.nombre
+        ORDER BY Monto_Total_Vendido DESC
+        LIMIT 1;
+        """
+
+        # Ejecutar la consulta SQL
+        cursor.execute(query)
+
+        # Obtener el resultado de la consulta
+        result = cursor.fetchall()
+
+        # Cerrar el cursor y la conexión
+        cursor.close()
+        connection.close()
+
+        # Devolver el resultado en formato JSON
+        return jsonify(result)
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+```
+# Mostrar consulta 4
+ Mostrara el país que más y menos ha vendido. Debe mostrar el nombre del país y elmonto. 
+ 
+```
+
+
+@app.route('/api/data/consulta4', methods=['GET'])
+def consulta4():
+    try:
+
+  
+        # Establecer conexión a la base de datos
+        connection = connect_to_database()
+
+        # Crear un cursor para ejecutar consultas SQL
+        cursor = connection.cursor(dictionary=True)
+
+        # Definir la consulta SQL
+        query = """
+       SELECT nombre_pais, monto_total_ventas
+FROM (
+    SELECT
+        pais.nombre AS nombre_pais,
+        SUM(detalle_orden.cantidad * productos.precio) AS monto_total_ventas
+    FROM
+        detalle_orden
+    JOIN
+        productos ON detalle_orden.id_producto = productos.id_producto
+    JOIN
+        vendedores ON detalle_orden.id_vendedor = vendedores.id_vendedor
+    JOIN
+        paises AS pais ON vendedores.id_pais = pais.id_pais
+    GROUP BY
+        pais.nombre
+    ORDER BY
+        monto_total_ventas DESC
+    LIMIT 1
+) AS max_vendido
+
+UNION
+
+SELECT nombre_pais, monto_total_ventas
+FROM (
+    SELECT
+        pais.nombre AS nombre_pais,
+        SUM(detalle_orden.cantidad * productos.precio) AS monto_total_ventas
+    FROM
+        detalle_orden
+    JOIN
+        productos ON detalle_orden.id_producto = productos.id_producto
+    JOIN
+        vendedores ON detalle_orden.id_vendedor = vendedores.id_vendedor
+    JOIN
+        paises AS pais ON vendedores.id_pais = pais.id_pais
+    GROUP BY
+        pais.nombre
+    ORDER BY
+        monto_total_ventas ASC
+    LIMIT 1
+) AS min_vendido;
+
+        """
+
+        # Ejecutar la consulta SQL
+        cursor.execute(query)
+
+        # Obtener el resultado de la consulta
+        result = cursor.fetchall()
+
+        # Cerrar el cursor y la conexión
+        cursor.close()
+        connection.close()
+
+        # Devolver el resultado en formato JSON
+        return jsonify(result)
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+
+```
+
+# Mostrar consulta 5
+
+Mostrará el Top 5 de países que más han comprado en orden ascendente. Se le solicita mostrar el id del país, nombre y monto total. Esto en el http://127.0.0.1:5000/api/data/consulta5
+
+```
+
+
+
+@app.route('/api/data/consulta5', methods=['GET'])
+def consulta5():
+    try:
+
+  
+        # Establecer conexión a la base de datos
+        connection = connect_to_database()
+
+        # Crear un cursor para ejecutar consultas SQL
+        cursor = connection.cursor(dictionary=True)
+
+        # Definir la consulta SQL
+        query = """
+       SELECT 
+    pais.id_pais,
+    pais.nombre AS nombre_pais,
+    SUM(detalle_orden.cantidad * productos.precio) AS monto_total
+FROM 
+    detalle_orden
+JOIN 
+    productos ON detalle_orden.id_producto = productos.id_producto
+JOIN 
+    vendedores ON detalle_orden.id_vendedor = vendedores.id_vendedor
+JOIN 
+    paises AS pais ON vendedores.id_pais = pais.id_pais
+GROUP BY 
+    pais.id_pais, pais.nombre
+ORDER BY 
+    monto_total ASC
+LIMIT 5;
+
+
+        """
+
+        # Ejecutar la consulta SQL
+        cursor.execute(query)
+
+        # Obtener el resultado de la consulta
+        result = cursor.fetchall()
+
+        # Cerrar el cursor y la conexión
+        cursor.close()
+        connection.close()
+
+        # Devolver el resultado en formato JSON
+        return jsonify(result)
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+```
+
+# Mostrar consulta 6
+
+Mostrara la categoría que más y menos se ha comprado. Debe de mostrar el nombre de la categoría y cantidad de unidades. esto en el http://127.0.0.1:5000/api/data/consulta6
+
+
+
+```
+
+@app.route('/api/data/consulta6', methods=['GET'])
+def consulta6():
+    try:
+
+  
+        # Establecer conexión a la base de datos
+        connection = connect_to_database()
+
+        # Crear un cursor para ejecutar consultas SQL
+        cursor = connection.cursor(dictionary=True)
+
+        # Definir la consulta SQL
+        query = """
+     SELECT nombre_categoria, cantidad_total_comprada
+FROM (
+    SELECT
+        categoria.nombre AS nombre_categoria,
+        SUM(detalle_orden.cantidad) AS cantidad_total_comprada
+    FROM
+        detalle_orden
+    JOIN
+        productos ON detalle_orden.id_producto = productos.id_producto
+    JOIN
+        categorias AS categoria ON productos.id_categoria = categoria.id_categoria
+    GROUP BY
+        categoria.nombre
+    ORDER BY
+        cantidad_total_comprada DESC
+    LIMIT 1
+) AS max_comprada
+
+UNION
+
+SELECT nombre_categoria, cantidad_total_comprada
+FROM (
+    SELECT
+        categoria.nombre AS nombre_categoria,
+        SUM(detalle_orden.cantidad) AS cantidad_total_comprada
+    FROM
+        detalle_orden
+    JOIN
+        productos ON detalle_orden.id_producto = productos.id_producto
+    JOIN
+        categorias AS categoria ON productos.id_categoria = categoria.id_categoria
+    GROUP BY
+        categoria.nombre
+    ORDER BY
+        cantidad_total_comprada ASC
+    LIMIT 1
+) AS min_comprada;
+
+
+        """
+
+        # Ejecutar la consulta SQL
+        cursor.execute(query)
+
+        # Obtener el resultado de la consulta
+        result = cursor.fetchall()
+
+        # Cerrar el cursor y la conexión
+        cursor.close()
+        connection.close()
+
+        # Devolver el resultado en formato JSON
+        return jsonify(result)
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+
+```
+
+
+
+# Mostrar consulta 7
+esta consulta muestra la categoría más comprada por cada país. Se muestra el nombre del país, nombre de la categoría y cantidad de unidades, esto al realizar la peticion GET en "http://127.0.0.1:5000/api/data/consulta7".
+
+```
+
+
+
+@app.route('/api/data/consulta7', methods=['GET'])
+def consulta7():
+    try:
+
+  
+        # Establecer conexión a la base de datos
+        connection = connect_to_database()
+
+        # Crear un cursor para ejecutar consultas SQL
+        cursor = connection.cursor(dictionary=True)
+
+        # Definir la consulta SQL
+        query = """
+    SELECT 
+    nombre_pais,
+    nombre_categoria,
+    cantidad_total_comprada
+FROM (
+    SELECT 
+        p.nombre AS nombre_pais,
+        c.nombre AS nombre_categoria,
+        SUM(do.cantidad) AS cantidad_total_comprada,
+        ROW_NUMBER() OVER(PARTITION BY p.id_pais ORDER BY SUM(do.cantidad) DESC) AS ranking
+    FROM 
+        detalle_orden do
+    JOIN 
+        productos pr ON do.id_producto = pr.id_producto
+    JOIN 
+        categorias c ON pr.id_categoria = c.id_categoria
+    JOIN 
+        vendedores v ON do.id_vendedor = v.id_vendedor
+    JOIN 
+        paises p ON v.id_pais = p.id_pais
+    GROUP BY 
+        p.id_pais, c.id_categoria
+) AS ranked_data
+WHERE 
+    ranking = 1;
+
+        """
+
+        # Ejecutar la consulta SQL
+        cursor.execute(query)
+
+        # Obtener el resultado de la consulta
+        result = cursor.fetchall()
+
+        # Cerrar el cursor y la conexión
+        cursor.close()
+        connection.close()
+
+        # Devolver el resultado en formato JSON
+        return jsonify(result)
+
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+```
 
 
 
